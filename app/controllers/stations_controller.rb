@@ -5,18 +5,21 @@ class StationsController < ApplicationController
   # GET /stations
   def index
     timeout = Station.timeout_time
-    if Station.all.empty? || (Time.now - Station.first.updated_at  > timeout)
-      request = Typhoeus::Request.new("https://api.tfl.gov.uk/bikepoint")
-      hydra = Typhoeus::Hydra.new
-      hydra.queue(request)
-      hydra.run
-      Station.destroy_all
-      stations = JSON.parse(request.response.response_body)
-      stations.each do |station|
-        s = Station.create(name: station["commonName"])
-        s.create_location(lat: station["lat"], lng: station["lon"])
-      end
-    end
+    station_creator = ::Services::Creation::Station.new(timeout)
+    station_creator.perform
+
+    # if Station.all.empty? || (Time.now - Station.first.updated_at  > timeout)
+    #   request = Typhoeus::Request.new("https://api.tfl.gov.uk/bikepoint")
+    #   hydra = Typhoeus::Hydra.new
+    #   hydra.queue(request)
+    #   hydra.run
+    #   Station.destroy_all
+    #   stations = JSON.parse(request.response.response_body)
+    #   stations.each do |station|
+    #     s = Station.create(name: station["commonName"])
+    #     s.create_location(lat: station["lat"], lng: station["lon"])
+    #   end
+    # end
     @stations = Station.all
 
     render json: @stations

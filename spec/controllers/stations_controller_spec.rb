@@ -13,11 +13,10 @@ RSpec.describe "stations api", :type => :request do
 
     context "when db is less than 5 min older" do
       it "returns the stations from the db" do
-        allow(Station).to receive(:timeout_time).and_return 5.seconds
+        allow(Station).to receive(:timeout_time).and_return 10.seconds
         VCR.use_cassette('tfl/stations_response', allow_playback_repeats: true) do
           get "/stations"
           updated_at = Station.first.created_at
-          sleep 0.5
           get "/stations"
           expect(updated_at.utc.to_s).to eq(Station.first.created_at.utc.to_s)
         end
