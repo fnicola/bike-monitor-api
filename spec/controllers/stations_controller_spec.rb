@@ -12,11 +12,12 @@ RSpec.describe "stations api", :type => :request do
     end
 
     context "when db is less than 5 min older" do
+      let(:station) { create(:station)}
+
       it "returns the stations from the db" do
         allow(Station).to receive(:timeout_time).and_return 10.seconds
         VCR.use_cassette('tfl/stations_response', allow_playback_repeats: true) do
-          get "/stations"
-          updated_at = Station.first.created_at
+          updated_at = station.created_at
           get "/stations"
           expect(updated_at.utc.to_s).to eq(Station.first.created_at.utc.to_s)
         end
@@ -24,12 +25,17 @@ RSpec.describe "stations api", :type => :request do
     end
 
     context "when db is older than 5 min older" do
+      let(:station) do
+       Timecop.travel(5.minutes.ago)
+       station = create(:station)
+       Timecop.return
+       station
+      end
+
       it "returns the stations from the external api" do
-        allow(Station).to receive(:timeout_time).and_return 1.seconds
         VCR.use_cassette('tfl/stations_response', allow_playback_repeats: true) do
-          get "/stations"
-          updated_at = Station.first.created_at
-          sleep 1.5
+
+          updated_at = station.created_at
           get "/stations"
           expect(updated_at.utc.to_s).not_to eq(Station.first.created_at.utc.to_s)
         end

@@ -34,6 +34,7 @@ group :development, :test do
   gem 'rspec-rails', '~>3.5'
   gem 'factory_girl'
   gem 'vcr'
+  gem 'timecop'
 end
 
 group :development do
